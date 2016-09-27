@@ -5,57 +5,64 @@ local passes = require '../passes'
 local interp = require '../interp'
 local args = require '../args'
 
-local args = {...}
+local regs = {}
+
+local file_arg = {}
+local passes_arg = {}
+local regs_arg
+do
+	local cur_reg = 1
+	regs_arg = args.bind(tonumber, setmetatable({ live = true }, { __call = function(self, arg)
+		return function()
+			regs[cur_reg] = arg
+			cur_reg = cur_reg + 1
+		end
+	end }))
+end
+
+args.parse({...}, args.merge(
+	args.seq(
+		args.one(file_arg),
+		args.merge(
+			regs_arg,
+			args.pattern('^(%d+)=(%d+)$', setmetatable({ live = true }, { __call = function(self, arg)
+				return function()
+					regs[tonumber(arg[1])] = tonumber(arg[2])
+				end
+			end }))
+		)
+	),
+	args.pattern('^%-p(.+)$', args.map(function(arg)
+		local name, parg = arg[1]:match '^([^%(]+)(%b())$'
+		if name then
+			parg = parg:sub(2, -2)
+		else
+			name = arg[1]
+		end
+		
+		if passes[name] then
+			return {passes[name], parg}
+		else
+			error(('unknown pass: %q'):format(name))
+		end
+	end, args.collect(passes_arg)))
+))
+
+if not file_arg.set then
+	error('no file specified')
+end
 
 local instrs, labels
 do
-	local h = io.open(args[1], 'r')
+	local h = io.open(file_arg.v, 'r')
+	if not h then error(('No file: %q'):format(file_arg.v), 0) end
 	local contents = h:read '*a'
 	h:close()
 	instrs, labels = parse(contents)
 end
 
-local regs = {}
-
-local cur_reg = 1
-for _, arg in ipairs({table.unpack(args, 2)}) do
-	repeat
-		local v = arg:match '^(%d+)$'
-		if v then
-			regs[cur_reg] = tonumber(v)
-			cur_reg = cur_reg + 1
-			break
-		end
-
-		local reg, v = arg:match '^(%d+)=(%d+)$'
-		if reg then
-			regs[tonumber(reg)] = tonumber(v)
-			break
-		end
-
-		local pass = arg:match '^%-p(.+)$'
-		if pass then
-			local name, parg
-
-			local name_, parg_ = pass:match '^([^%(]+)(%b())$'
-			if name_ then
-				name = name_
-				parg = parg_:sub(2, -2)
-			else
-				name = pass
-				parg = nil
-			end
-			
-			if passes[name] then
-				instrs, labels = passes[name](parg, instrs, labels)
-			else
-				error(('unknown pass: %q'):format(name))
-			end
-			break
-		end
-
-		error(('unhandled arg: %q'):format(arg))
-	until true
+for _, pass in ipairs(passes_arg) do
+	instrs, labels = pass[1](pass[2], instrs, labels)
 end
 
 local regs, ip, count = interp(instrs, regs)
