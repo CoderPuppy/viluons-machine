@@ -30,7 +30,8 @@ return function(instrs, labels)
 		out = out .. ('%q -> "instr-%d";\n'):format('lbl-' .. lbl, i)
 	end
 
-	out = out .. 'START -> "instr-1";\n'
+	out = out .. '"instr-0" [label=START];\n'
+	out = out .. '"instr-0" -> "instr-1";\n'
 	out = out .. ('"instr-%d" [label=END];\n'):format(#instrs + 1)
 
 	return out
