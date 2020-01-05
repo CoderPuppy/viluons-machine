@@ -9,7 +9,7 @@ return function(instrs, labels)
 				out = out .. ('"instr-%d" -> "instr-%d" [];\n'):format(i, i + instr[2] + 1)
 			end
 		elseif instr[1] == 'JIZ' then
-			out = out .. ('label="JIZ %d"];\n'):format(instr[2])
+			out = out .. ('label="JIZ K%d"];\n'):format(instr[2])
 			if type(instr[3]) == 'number' then
 				out = out .. ('"instr-%d" -> "instr-%d" [label=%q];\n'):format(i, i + instr[3] + 1, ('K%d == 0'):format(instr[2]))
 			end

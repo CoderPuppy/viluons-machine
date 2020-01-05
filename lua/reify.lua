@@ -13,12 +13,12 @@ return function(instrs, labels)
 			error('unknown instruction: ' .. tostring(instr[1]))
 		end
 	end
+	
+	for i, line in ipairs(lines) do
+		lines[i] = '  ' .. line
+	end
 
 	do
-		for i, line in ipairs(lines) do
-			lines[i] = '  ' .. line
-		end
-
 		local labels_i = {}
 		for lbl, i in pairs(labels) do
 			labels_i[#labels_i + 1] = {lbl, i}

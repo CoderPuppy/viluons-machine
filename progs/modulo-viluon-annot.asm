@@ -70,11 +70,14 @@ redo:
 ; GOTO redo
 	JMP :redo
 	; JMP -27
+
 2lteq3:
-?K3 1
-; GOTO END
-	JMP END
-	; JMP 3
+; IF K3 != 0
+; THEN GOTO END
+	?K3 1
+	; GOTO END
+		JMP END
+		; JMP 3
 
 ; K7 = 0
 	?K7 2

@@ -1,6 +1,6 @@
-return function(instrs, regs_, ip_)
-	local regs = setmetatable({}, { __index = function(t, k)
-		local v = regs_ and regs_[k] or 0
+return function(instrs, regs, ip_)
+	setmetatable(regs, { __index = function(t, k)
+		local v = 0
 		rawset(t, k, v)
 		return v
 	end })
@@ -24,10 +24,10 @@ return function(instrs, regs_, ip_)
 			jump(to)
 		end;
 		INCR = function(reg)
-			regs[reg] = regs[reg] + 1
+			regs[reg] = math.max(regs[reg] + 1, 0)
 		end;
 		DECR = function(reg)
-			regs[reg] = regs[reg] - 1
+			regs[reg] = math.max(regs[reg] - 1, 0)
 		end;
 	}
 
@@ -41,6 +41,8 @@ return function(instrs, regs_, ip_)
 		end
 
 		local instr = instrs[ip]
+
+		-- print(ip, table.concat(instr, ' '))
 
 		if handlers[instr[1]] then
 			handlers[instr[1]](table.unpack(instr, 2, #instr))

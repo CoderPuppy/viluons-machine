@@ -19,7 +19,7 @@ args.parse({...}, args.merge(
 		end
 		
 		if passes[name] then
-			return {passes[name], parg}
+			return {passes[name], parg, name = name;}
 		else
 			error(('unknown pass: %q'):format(name))
 		end

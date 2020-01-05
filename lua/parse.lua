@@ -24,6 +24,12 @@ return function(s)
 					break
 				end
 
+				local reg, to = instr:match '^%?K(%d+)%-%-%s+(.+)$'
+				if reg then
+					instrs[#instrs + 1] = {'DECR?', tonumber(reg), to}
+					break
+				end
+
 				local to = instr:match '^JMP%s+(.+)$'
 				if to then
 					instrs[#instrs + 1] = {'JMP', to}
